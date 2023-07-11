@@ -19,14 +19,19 @@
           </span>
         </div>
       </div>
-      <OverflowFade v-if="item.description || item.lastFmUrl || item.musicBrainzUrl" class="mb-3">
+      <OverflowFade class="mb-3">
         {{ item.description }}
-        <ExternalLink v-if="item.lastFmUrl" :href="item.lastFmUrl">
-          Last.fm <Icon icon="link" />
-        </ExternalLink>.
-        <ExternalLink v-if="item.musicBrainzUrl" :href="item.musicBrainzUrl">
-          MusicBrainz <Icon icon="link" />
-        </ExternalLink>
+        <div class="mt-1 links">
+          <ExternalLink v-if="item.lastFmUrl" :href="item.lastFmUrl">
+            Last.fm <Icon icon="link" />
+          </ExternalLink>
+          <ExternalLink v-if="item.musicBrainzUrl" :href="item.musicBrainzUrl">
+            MusicBrainz <Icon icon="link" />
+          </ExternalLink>
+          <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(item.name)}&searchtype=a`">
+            Rate Your Music <Icon icon="link" />
+          </ExternalLink>
+        </div>
       </OverflowFade>
       <div class="text-nowrap">
         <b-button variant="secondary" :disabled="item.topTracks.length === 0" class="mr-2" @click="playNow">
@@ -139,3 +144,9 @@
     }
   })
 </script>
+<style scoped>
+  .links {
+    display: flex;
+    gap: 5px;
+  }
+</style>
