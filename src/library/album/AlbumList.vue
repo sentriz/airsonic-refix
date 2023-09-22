@@ -5,6 +5,7 @@
       :image="item.image"
       :to="{name: 'album', params: { id: item.id } }"
       :title="item.name"
+      :subtitle="item.year"
       :draggable="true" @dragstart="dragstart(item.id, $event)"
     >
       <template #text>
