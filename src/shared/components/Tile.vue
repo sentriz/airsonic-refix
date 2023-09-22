@@ -10,11 +10,12 @@
       </template>
     </ContextMenu>
     <div class="card-body">
-      <div class="text-truncate font-weight-bold">
+      <div class="text-truncate">
         <slot name="title">
           <router-link :to="props.to">
-            {{ props.title }}
+            <span class="font-weight-bold">{{ props.title }}</span>
           </router-link>
+          <span v-if="props.subtitle" class="subtitle text-muted"> {{ props.subtitle }}</span>
         </slot>
       </div>
       <div class="text-truncate text-muted">
@@ -36,5 +37,8 @@
       height: 100%;
       object-fit: cover;
     }
+  }
+  .subtitle {
+    font-size: 14px;
   }
 </style>
