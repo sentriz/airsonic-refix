@@ -47,6 +47,7 @@ export interface Album {
   image?: string
   lastFmUrl?: string
   musicBrainzUrl?: string
+  duration: number
   tracks?: Track[]
   releaseType?: string
 }
@@ -599,6 +600,7 @@ export class API {
       musicBrainzUrl: item.musicBrainzId
         ? `https://musicbrainz.org/release/${item.musicBrainzId}`
         : undefined,
+      duration: item.duration,
       tracks: (item.song || []).map(this.normalizeTrack, this),
       releaseType: this.normalizeReleaseType(item),
     }
