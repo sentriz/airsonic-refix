@@ -18,6 +18,10 @@
           <span class="mx-2">•</span> {{ album.year }}
         </template>
 
+        <template v-if="album.year">
+          <span class="mx-2">•</span> {{ duration }}
+        </template>
+
         <template v-if="album.genres.length">
           <span class="mx-2">•</span>
           <span v-for="({ name: genre }, index) in album.genres" :key="genre">
@@ -81,6 +85,7 @@
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
   import { usePlayerStore } from '@/player/store'
+  import { formatDuration } from '@/shared/utils'
 
   export default defineComponent({
     components: {
@@ -107,6 +112,10 @@
       isFavourite(): boolean {
         return !!this.favouriteStore.albums[this.id]
       },
+      duration(): string {
+        if (!this.album?.duration) return ''
+        return formatDuration(this.album.duration)
+      }
     },
     async created() {
       this.album = await this.$api.getAlbumDetails(this.id)
