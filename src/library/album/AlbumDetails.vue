@@ -18,6 +18,7 @@
           </span>
         </div>
         <span v-if="album.year" class="mx-1"> • {{ album.year }}</span>
+        <span v-if="duration"> • {{ duration }}</span>
         <span class="mr-3" />
         <div class="d-flex flex-nowrap">
           <ExternalLink v-if="album.lastFmUrl" :href="album.lastFmUrl" class="btn btn-link p-0 mr-2" title="Last.fm">
@@ -74,6 +75,7 @@
   import IconLastFm from '@/shared/components/IconLastFm.vue'
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
+  import { formatDuration } from '@/shared/utils'
 
   export default defineComponent({
     components: {
@@ -99,6 +101,10 @@
       isFavourite(): boolean {
         return !!this.favouriteStore.albums[this.id]
       },
+      duration(): string {
+        if (!this.album?.duration) return ''
+        return formatDuration(this.album.duration)
+      }
     },
     async created() {
       this.album = await this.$api.getAlbumDetails(this.id)
