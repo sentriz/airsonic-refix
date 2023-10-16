@@ -38,6 +38,7 @@ export interface Album {
   favourite: boolean
   genres: Genre[]
   image?: string
+  duration: number
   tracks?: Track[]
 }
 
@@ -502,6 +503,7 @@ export class API {
       year: item.year || 0,
       favourite: !!item.starred,
       genres: this.normalizeGenres(item),
+      duration: item.duration,
       tracks: (item.song || []).map(this.normalizeTrack, this)
     }
   }

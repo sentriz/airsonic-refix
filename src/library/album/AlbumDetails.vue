@@ -14,6 +14,7 @@
           <router-link :key="`${artist.id}-link`" :to="{name: 'artist', params: { id: artist.id }}">{{ artist.name }}</router-link>
         </template>
         <span v-if="album.year"> • {{ album.year }}</span>
+        <span v-if="duration"> • {{ duration }}</span>
         <span v-if="album.genres.length"> •
           <template v-for="({ name: genre }, index) in album.genres">
             <span v-if="index > 0" :key="genre" class="text-muted">, </span>
@@ -50,6 +51,7 @@
   import TrackList from '@/library/track/TrackList.vue'
   import { Album } from '@/shared/api'
   import { useFavouriteStore } from '@/library/favourite/store'
+  import { formatDuration } from '@/shared/utils'
 
   export default defineComponent({
     components: {
@@ -72,6 +74,10 @@
       isFavourite(): boolean {
         return !!this.favouriteStore.albums[this.id]
       },
+      duration(): string {
+        if (!this.album?.duration) return ''
+        return formatDuration(this.album.duration)
+      }
     },
     async created() {
       this.album = await this.$api.getAlbumDetails(this.id)
