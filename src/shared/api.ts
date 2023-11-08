@@ -37,9 +37,12 @@ export interface Genre {
 export interface Album {
   id: string
   name: string
+  description?: string
   artists: {name: string, id: string}[]
   year: number
   favourite: boolean
+  lastFmUrl?: string
+  musicBrainzUrl?: string
   genres: Genre[]
   image?: string
   duration: number
@@ -209,11 +212,13 @@ export class API {
   }
 
   async getArtistDetails(id: string): Promise<Artist> {
-    const info2Promise = this.fetch('rest/getArtistInfo2', { id }).then(r => r.artistInfo2)
     const artist = await this.fetch('rest/getArtist', { id }).then(r => r.artist)
-    const topSongs = await this.fetch('rest/getTopSongs', { artist: artist.name }).then(r => r.topSongs?.song)
-    const info2 = await info2Promise
-    return this.normalizeArtist({ ...artist, ...info2, topSongs })
+    return Promise.all([
+      this.fetch('rest/getArtistInfo2', { id }),
+      this.fetch('rest/getTopSongs', { artist: artist.name }),
+    ]).then(([info2, topSongs]) => {
+      return this.normalizeArtist({ ...artist, ...info2?.artistInfo2, ...artist?.artist, topSongs: topSongs.topSongs?.song })
+    })
   }
 
   async * getTracksByArtist(id: string): AsyncGenerator<Track[]> {
@@ -231,9 +236,12 @@ export class API {
   }
 
   async getAlbumDetails(id: string): Promise<Album> {
-    const params = { id }
-    const data = await this.fetch('rest/getAlbum', params)
-    return this.normalizeAlbum(data.album)
+    return Promise.all([
+      this.fetch('rest/getAlbum', { id }),
+      this.fetch('rest/getAlbumInfo2', { id }),
+    ]).then(([album, info2]) => {
+      return this.normalizeAlbum({ ...album?.album, ...info2?.albumInfo })
+    })
   }
 
   async getPlaylists() {
@@ -507,15 +515,20 @@ export class API {
     return {
       id: item.id,
       name: item.name,
+      description: (item.notes || '').replace(/<a[^>]*>.*?<\/a>/gm, ''),
       artists: item.artists?.length
         ? item.artists
         : [{ id: item.artistId, name: item.artist }],
       image: this.getCoverArtUrl(item),
       year: item.year || 0,
       favourite: !!item.starred,
+      lastFmUrl: item.lastFmUrl,
+      musicBrainzUrl: item.musicBrainzId
+        ? `https://musicbrainz.org/release/${item.musicBrainzId}`
+        : undefined,
       genres: this.normalizeGenres(item),
       duration: item.duration,
-      tracks: (item.song || []).map(this.normalizeTrack, this)
+      tracks: (item.song || []).map(this.normalizeTrack, this),
     }
   }
 
