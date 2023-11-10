@@ -1,51 +1,63 @@
 <template>
   <div>
     <ul class="nav-underlined mb-3">
-      <li>
-        <router-link :to="{... $route, params: {... $route.params, sort: null }}">
-          Most albums
-        </router-link>
-      </li>
-      <li>
-        <router-link :to="{... $route, params: {... $route.params, sort: 'a-z' }}">
-          A-Z
+      <li v-for="{ value, text } in options" :key="value">
+        <router-link :to="{... $route, params: {... $route.params, sort: value }}">
+          {{ text }}
         </router-link>
       </li>
     </ul>
-    <ContentLoader v-slot :loading="loading">
-      <ArtistList :items="sortedItems" />
-    </ContentLoader>
+    <ArtistList :items="artists" />
+    <InfiniteLoader :key="sort" :loading="loading" :has-more="hasMore" @load-more="loadMore" />
   </div>
 </template>
 <script lang="ts">
   import { defineComponent } from 'vue'
   import ArtistList from './ArtistList.vue'
-  import { Artist } from '@/shared/api'
-  import { orderBy } from 'lodash-es'
+  import { Artist, ArtistSort } from '@/shared/api'
 
   export default defineComponent({
     components: {
       ArtistList,
     },
     props: {
-      sort: { type: String, default: null },
+      sort: { type: String, required: true },
     },
     data() {
       return {
-        loading: true,
-        items: [] as readonly Artist[]
+        artists: [] as | Artist[],
+        loading: false,
+        offset: 0 as number,
+        hasMore: true,
       }
     },
     computed: {
-      sortedItems(): Artist[] {
-        return this.sort === 'a-z'
-          ? orderBy(this.items, 'name')
-          : orderBy(this.items, 'albumCount', 'desc')
-      },
+      options() {
+        return [
+          { text: 'Most albums', value: 'most-albums' },
+          { text: 'A-Z', value: 'a-z' },
+        ]
+      }
     },
-    async created() {
-      this.items = Object.freeze(await this.$api.getArtists())
-      this.loading = false
+    watch: {
+      sort: {
+        handler() {
+          this.artists = []
+          this.offset = 0
+          this.hasMore = true
+        }
+      }
+    },
+    methods: {
+      loadMore() {
+        this.loading = true
+        return this.$api.getArtists(this.sort as ArtistSort, 100, this.offset).then(artists => {
+          this.artists.push(...artists)
+          this.offset += artists.length
+          this.hasMore = artists.length > 0
+          this.loading = false
+        })
+      }
     }
   })
 </script>

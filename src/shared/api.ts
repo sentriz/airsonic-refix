@@ -1,5 +1,5 @@
 import { AuthService } from '@/auth/service'
-import { map, max, orderBy, uniq, uniqBy } from 'lodash-es'
+import { map, max, orderBy, uniqBy } from 'lodash-es'
 import { toQueryString } from '@/shared/utils'
 
 export type AlbumSort =
@@ -8,6 +8,10 @@ export type AlbumSort =
   'recently-played' |
   'most-played' |
   'random'
+
+export type ArtistSort =
+  'a-z' |
+  'most-albums'
 
 export interface Track {
   id: string
@@ -175,11 +179,18 @@ export class API {
     return (response.songsByGenre?.song || []).map(this.normalizeTrack, this)
   }
 
-  async getArtists(): Promise<Artist[]> {
+  async getArtists(sort: ArtistSort, size: number, offset = 0): Promise<Artist[]> {
     const response = await this.fetch('rest/getArtists')
-    return (response.artists?.index || [])
-      .flatMap((index: any) => index.artist)
-      .map(this.normalizeArtist, this)
+
+    // TODO: propose sort/size/offset for getArtists
+    let items = (response.artists?.index || [])
+    items = items.flatMap((index: any) => index.artist)
+    items = sort === 'a-z'
+      ? orderBy(items, 'name')
+      : orderBy(items, 'albumCount', 'desc')
+    items = items.slice(offset, offset + size)
+    items = items.map(this.normalizeArtist, this)
+    return items
   }
 
   async getAlbums(sort: AlbumSort, size: number, offset = 0): Promise<Album[]> {
