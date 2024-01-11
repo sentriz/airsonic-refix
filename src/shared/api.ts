@@ -572,13 +572,15 @@ export class API {
   }
 
   private normalizeGenres(item: any): Genre[] {
-    if (item.genres?.length) {
-      return item.genres
-    }
+    let genres: Genre[] = []
     if (item.genre) {
-      return [{ name: item.genre }]
+      genres = [{ name: item.genre }]
     }
-    return []
+    if (item.genres?.length) {
+      genres = item.genres
+    }
+    genres = genres.filter(g => !(/\bunknown\b/i).test(g.name))
+    return genres
   }
 
   private normalizeAlbum(item: any): Album {
