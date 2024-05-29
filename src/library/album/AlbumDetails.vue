@@ -24,17 +24,17 @@
       </p>
       <OverflowFade class="mb-3">
         {{ album.description }}
-        <div class="mt-1 links">
+        <LinkList>
           <ExternalLink v-if="album.lastFmUrl" :href="album.lastFmUrl">
-            Last.fm <Icon icon="link" />
+            Last.fm
           </ExternalLink>
           <ExternalLink v-if="album.musicBrainzUrl" :href="album.musicBrainzUrl">
-            MusicBrainz <Icon icon="link" />
+            MusicBrainz
           </ExternalLink>
           <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(album.name)}&searchtype=l`">
-            Rate Your Music <Icon icon="link" />
+            Rate Your Music
           </ExternalLink>
-        </div>
+        </LinkList>
       </OverflowFade>
       <div class="text-nowrap">
         <b-button variant="secondary" class="mr-2" @click="playNow">
@@ -67,11 +67,13 @@
   import { useFavouriteStore } from '@/library/favourite/store'
   import { formatDuration } from '@/shared/utils'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
+  import LinkList from '@/shared/components/LinkList.vue'
 
   export default defineComponent({
     components: {
       TrackList,
       OverflowFade,
+      LinkList,
     },
     props: {
       id: { type: String, required: true }
@@ -125,9 +127,3 @@
     }
   })
 </script>
-<style scoped>
-  .links {
-    display: flex;
-    gap: 12px;
-  }
-</style>

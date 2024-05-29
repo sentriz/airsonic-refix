@@ -21,17 +21,20 @@
       </div>
       <OverflowFade class="mb-3">
         {{ item.description }}
-        <div class="mt-1 links">
+        <LinkList class="mt-1">
           <ExternalLink v-if="item.lastFmUrl" :href="item.lastFmUrl">
-            Last.fm <Icon icon="link" />
+            Last.fm
           </ExternalLink>
           <ExternalLink v-if="item.musicBrainzUrl" :href="item.musicBrainzUrl">
-            MusicBrainz <Icon icon="link" />
+            MusicBrainz
           </ExternalLink>
           <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(item.name)}&searchtype=a`">
-            Rate Your Music <Icon icon="link" />
+            Rate Your Music
           </ExternalLink>
-        </div>
+          <ExternalLink :href="`https://redacted.ch/artist.php?artistname=${encodeURIComponent(item.name)}`">
+            Redacted
+          </ExternalLink>
+        </LinkList>
       </OverflowFade>
       <div class="text-nowrap">
         <b-button variant="secondary" :disabled="item.topTracks.length === 0" class="mr-2" @click="playNow">
@@ -82,6 +85,7 @@
   import TrackList from '@/library/track/TrackList.vue'
   import { useFavouriteStore } from '@/library/favourite/store'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
+  import LinkList from '@/shared/components/LinkList.vue'
   import { Album } from '@/shared/api'
   import { orderBy } from 'lodash-es'
   import { useMainStore } from '@/shared/store'
@@ -92,6 +96,7 @@
       ArtistList,
       OverflowFade,
       TrackList,
+      LinkList,
     },
     props: {
       id: { type: String, required: true }
@@ -144,9 +149,3 @@
     }
   })
 </script>
-<style scoped>
-  .links {
-    display: flex;
-    gap: 5px;
-  }
-</style>
