@@ -22,6 +22,9 @@
           </template>
         </span>
       </p>
+      <OverflowFade class="mb-3">
+        {{ album.description }}
+      </OverflowFade>
       <div class="text-nowrap">
         <b-button variant="secondary" class="mr-2" @click="playNow">
           <Icon icon="play" /> Play
@@ -52,10 +55,12 @@
   import { Album } from '@/shared/api'
   import { useFavouriteStore } from '@/library/favourite/store'
   import { formatDuration } from '@/shared/utils'
+  import OverflowFade from '@/shared/components/OverflowFade.vue'
 
   export default defineComponent({
     components: {
       TrackList,
+      OverflowFade,
     },
     props: {
       id: { type: String, required: true }
