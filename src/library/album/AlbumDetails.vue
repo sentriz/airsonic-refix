@@ -10,9 +10,7 @@
           by
           <span v-for="(artist, index) in album.artists" :key="artist.id">
             <span v-if="index > 0">, </span>
-            <router-link :to="{name: 'artist', params: { id: artist.id }}">
-              {{ artist.name }}
-            </router-link>
+            <router-link :to="{name: 'artist', params: { id: artist.id }}">{{ artist.name }}</router-link>
           </span>
         </div>
 
