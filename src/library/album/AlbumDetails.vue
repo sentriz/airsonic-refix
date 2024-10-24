@@ -32,17 +32,18 @@
           </span>
         </template>
 
-        <template v-if="album.lastFmUrl || album.musicBrainzUrl">
-          <span class="mx-2">•</span>
-          <div class="d-flex flex-nowrap">
-            <ExternalLink v-if="album.lastFmUrl" :href="album.lastFmUrl" class="btn btn-link p-0 me-2" title="Last.fm">
-              <IconLastFm />
-            </ExternalLink>
-            <ExternalLink v-if="album.musicBrainzUrl" :href="album.musicBrainzUrl" class="btn btn-link me-2 p-0" title="MusicBrainz">
-              <IconMusicBrainz />
-            </ExternalLink>
-          </div>
-        </template>
+        <span class="mx-2">•</span>
+        <div class="d-flex flex-nowrap">
+          <ExternalLink v-if="album.lastFmUrl" :href="album.lastFmUrl" class="btn btn-link p-0 me-2" title="Last.fm">
+            <IconLastFm />
+          </ExternalLink>
+          <ExternalLink v-if="album.musicBrainzUrl" :href="album.musicBrainzUrl" class="btn btn-link me-2 p-0" title="MusicBrainz">
+            <IconMusicBrainz />
+          </ExternalLink>
+          <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(formatArtists(album.artists) + ' - ' + album.name)}&searchtype=l`" class="btn btn-link me-2 p-0" title="Rate Your Music">
+            <IconRateYourMusic />
+          </ExternalLink>
+        </div>
       </div>
 
       <OverflowFade v-if="album.description" class="mt-3">
@@ -83,15 +84,17 @@
   import { useFavouriteStore } from '@/library/favourite/store'
   import IconLastFm from '@/shared/components/IconLastFm.vue'
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
+  import IconRateYourMusic from '@/shared/components/IconRateYourMusic.vue'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
   import { usePlayerStore } from '@/player/store'
-  import { formatDuration } from '@/shared/utils'
+  import { formatDuration, formatArtists } from '@/shared/utils'
 
   export default defineComponent({
     components: {
       OverflowFade,
       IconMusicBrainz,
       IconLastFm,
+      IconRateYourMusic,
       TrackList,
     },
     props: {
@@ -140,6 +143,7 @@
       toggleFavourite() {
         return this.favouriteStore.toggle('album', this.id)
       },
+      formatArtists,
     }
   })
 </script>
