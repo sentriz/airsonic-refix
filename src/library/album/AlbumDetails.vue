@@ -25,6 +25,9 @@
           <ExternalLink v-if="album.musicBrainzUrl" :href="album.musicBrainzUrl" class="btn btn-link mr-2 p-0" title="MusicBrainz">
             <IconMusicBrainz />
           </ExternalLink>
+          <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(formatArtists(album.artists) + ' - ' + album.name)}&searchtype=l`" class="btn btn-link mr-2 p-0" title="Rate Your Music">
+            <IconRateYourMusic />
+          </ExternalLink>
         </div>
       </div>
 
@@ -72,14 +75,16 @@
   import { useFavouriteStore } from '@/library/favourite/store'
   import IconLastFm from '@/shared/components/IconLastFm.vue'
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
+  import IconRateYourMusic from '@/shared/components/IconRateYourMusic.vue'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
-  import { formatDuration } from '@/shared/utils'
+  import { formatDuration, formatArtists } from '@/shared/utils'
 
   export default defineComponent({
     components: {
       OverflowFade,
       IconMusicBrainz,
       IconLastFm,
+      IconRateYourMusic,
       TrackList,
     },
     props: {
@@ -131,6 +136,7 @@
       toggleFavourite() {
         return this.favouriteStore.toggle('album', this.id)
       },
+      formatArtists,
     }
   })
 </script>

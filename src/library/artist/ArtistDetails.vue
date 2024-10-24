@@ -22,6 +22,9 @@
           <ExternalLink v-if="item.musicBrainzUrl" :href="item.musicBrainzUrl" class="btn btn-link mr-2 p-0" title="MusicBrainz">
             <IconMusicBrainz />
           </ExternalLink>
+          <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(item.name)}&searchtype=l`" class="btn btn-link mr-2 p-0" title="Rate Your Music">
+            <IconRateYourMusic />
+          </ExternalLink>
         </div>
       </div>
       <div v-if="item.genres.length > 0">
@@ -91,11 +94,13 @@
   import { useMainStore } from '@/shared/store'
   import IconLastFm from '@/shared/components/IconLastFm.vue'
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
+  import IconRateYourMusic from '@/shared/components/IconRateYourMusic.vue'
 
   export default defineComponent({
     components: {
       IconMusicBrainz,
       IconLastFm,
+      IconRateYourMusic,
       AlbumList,
       ArtistList,
       OverflowFade,
@@ -148,7 +153,7 @@
       },
       toggleAlbumSortOrder() {
         this.mainStore.toggleArtistAlbumSortOrder()
-      }
+      },
     }
   })
 </script>
