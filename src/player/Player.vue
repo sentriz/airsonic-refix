@@ -16,7 +16,10 @@
                 {{ streamTitle || track.title }}
               </div>
               <div class="text-truncate text-muted">
-                {{ formatArtists(track.artists || []) || track.album }}
+                <span v-for="(artist, index) in track.artists" :key="artist.id">
+                  <span v-if="index > 0">, </span>
+                  <router-link :to="{name: 'artist', params: { id: artist.id }}">{{ artist.name }}</router-link>
+                </span>
               </div>
             </div>
           </template>
