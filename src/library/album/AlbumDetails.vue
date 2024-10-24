@@ -28,6 +28,9 @@
           <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(formatArtists(album.artists) + ' - ' + album.name)}&searchtype=l`" class="btn btn-link mr-2 p-0" title="Rate Your Music">
             <IconRateYourMusic />
           </ExternalLink>
+          <ExternalLink :href="`https://redacted.ch/torrents.php?searchstr=${encodeURIComponent(formatArtists(album.artists) + ' - ' + album.name)}`" class="btn btn-link mr-2 p-0" title="Redacted">
+            <IconRED />
+          </ExternalLink>
         </div>
       </div>
 
@@ -76,6 +79,7 @@
   import IconLastFm from '@/shared/components/IconLastFm.vue'
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
   import IconRateYourMusic from '@/shared/components/IconRateYourMusic.vue'
+  import IconRED from '@/shared/components/IconRED.vue'
   import OverflowFade from '@/shared/components/OverflowFade.vue'
   import { formatDuration, formatArtists } from '@/shared/utils'
 
@@ -85,6 +89,7 @@
       IconMusicBrainz,
       IconLastFm,
       IconRateYourMusic,
+      IconRED,
       TrackList,
     },
     props: {
