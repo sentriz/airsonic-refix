@@ -24,17 +24,21 @@
           </span>
         </template>
 
-        <template v-if="item.lastFmUrl || item.musicBrainzUrl">
-          <span class="mx-2">•</span>
-          <div class="d-flex flex-nowrap">
-            <ExternalLink v-if="item.lastFmUrl" :href="item.lastFmUrl" class="btn btn-link p-0 me-2" title="Last.fm">
-              <IconLastFm />
-            </ExternalLink>
-            <ExternalLink v-if="item.musicBrainzUrl" :href="item.musicBrainzUrl" class="btn btn-link me-2 p-0" title="MusicBrainz">
-              <IconMusicBrainz />
-            </ExternalLink>
-          </div>
-        </template>
+        <span class="mx-2">•</span>
+        <div class="d-flex flex-nowrap">
+          <ExternalLink v-if="item.lastFmUrl" :href="item.lastFmUrl" class="btn btn-link p-0 me-2" title="Last.fm">
+            <IconLastFm />
+          </ExternalLink>
+          <ExternalLink v-if="item.musicBrainzUrl" :href="item.musicBrainzUrl" class="btn btn-link me-2 p-0" title="MusicBrainz">
+            <IconMusicBrainz />
+          </ExternalLink>
+          <ExternalLink :href="`https://rateyourmusic.com/search?searchterm=${encodeURIComponent(item.name)}&searchtype=a`" class="btn btn-link me-2 p-0" title="Rate Your Music">
+            <IconRateYourMusic />
+          </ExternalLink>
+          <ExternalLink :href="`https://redacted.sh/artist.php?artistname=${encodeURIComponent(item.name)}`" class="btn btn-link me-2 p-0" title="Redacted">
+            <IconRED />
+          </ExternalLink>
+        </div>
       </div>
 
       <OverflowFade v-if="item.description" class="mt-3">
@@ -103,11 +107,15 @@
   import IconLastFm from '@/shared/components/IconLastFm.vue'
   import IconMusicBrainz from '@/shared/components/IconMusicBrainz.vue'
   import { usePlayerStore } from '@/player/store'
+  import IconRateYourMusic from '@/shared/components/IconRateYourMusic.vue'
+  import IconRED from '@/shared/components/IconRED.vue'
 
   export default defineComponent({
     components: {
       IconMusicBrainz,
       IconLastFm,
+      IconRateYourMusic,
+      IconRED,
       AlbumList,
       ArtistList,
       OverflowFade,
@@ -180,7 +188,7 @@
       },
       toggleAlbumSortOrder() {
         this.mainStore.toggleArtistAlbumSortOrder()
-      }
+      },
     }
   })
 </script>
