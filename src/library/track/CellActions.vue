@@ -1,5 +1,8 @@
 <template>
-  <td class="text-end" @click.stop="">
+  <td class="text-end d-flex justify-content-end align-items-center" @click.stop="">
+    <span v-if="isFavourite" @click="toggleFavourite()">
+      <Icon icon="heart-fill" />
+    </span>
     <OverflowMenu>
       <DropdownItem v-if="!track.isUnavailable" icon="plus" @click="setNextInQueue()">
         Play next
