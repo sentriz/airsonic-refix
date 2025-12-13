@@ -13,7 +13,7 @@
   />
 </template>
 <script lang="ts">
-  import { defineComponent } from 'vue'
+  import { defineComponent, ref, watch } from 'vue'
   import VueSlider from 'vue-slider-component'
   import { formatDuration } from '@/shared/utils'
   import { usePlayerStore } from '@/player/store'
@@ -23,14 +23,21 @@
       VueSlider,
     },
     setup() {
-      return {
-        playerStore: usePlayerStore(),
-      }
-    },
-    computed: {
-      progress(): number {
-        return this.playerStore.progress
-      },
+      const playerStore = usePlayerStore()
+      const progress = ref(0)
+
+      // only update progress bar when page is visible
+      watch(
+        () => playerStore.progress,
+        (value) => {
+          if (!document.hidden) {
+            progress.value = value
+          }
+        },
+        { immediate: true }
+      )
+
+      return { playerStore, progress }
     },
     methods: {
       formatter(value: number): string {
