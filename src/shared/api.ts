@@ -19,6 +19,7 @@ export interface Track {
   track?: number
   album?: string
   albumId?: string
+  discNumber?: number
   artists: {name: string, id: string}[]
   isStream?: boolean
   isPodcast?: boolean
@@ -50,6 +51,7 @@ export interface Album {
   duration: number
   tracks?: Track[]
   releaseType?: string
+  discTitles: string[]
 }
 
 export interface Artist {
@@ -563,6 +565,7 @@ export class API {
       track: item.track,
       album: item.album,
       albumId: item.albumId,
+      discNumber: Number.isInteger(item.discNumber) ? Math.max(0, item.discNumber - 1) : undefined,
       artists: item.artists?.length
         ? item.artists
         : [{ id: item.artistId, name: item.artist }],
@@ -603,6 +606,7 @@ export class API {
       duration: item.duration,
       tracks: (item.song || []).map(this.normalizeTrack, this),
       releaseType: this.normalizeReleaseType(item),
+      discTitles: this.normalizeDiscTitles(item),
     }
   }
 
@@ -618,6 +622,14 @@ export class API {
       return value
     }
     return startCase(item.releaseTypes[0].toLowerCase())
+  }
+
+  private normalizeDiscTitles(item: any): string[] {
+    const discTitles: string[] = []
+    for (const d of item.discTitles || []) {
+      discTitles[Math.max(0, d.disc - 1)] = d.title
+    }
+    return discTitles
   }
 
   private normalizeArtist(item: any): Artist {
