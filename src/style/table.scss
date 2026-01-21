@@ -27,6 +27,20 @@ table.table {
   }
 }
 
+table.table tr.disc-header {
+  cursor: default;
+  &:hover {
+    --bs-table-hover-bg: transparent;
+  }
+  td {
+    padding-left: 6px;
+    text-align: unset;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    border-bottom: 1px solid var(--bs-secondary-color);;
+  }
+}
+
 table.table-numbered {
   th:first-child, td:first-child {
     padding-left: 0;
