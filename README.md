@@ -66,8 +66,8 @@ Pre-built bundles can be found in [Releases](https://github.com/tamland/airsonic
 ### Build from source
 
 ```
-$ yarn install
-$ yarn build
+$ pnpm install
+$ pnpm build
 ```
 
 Bundle can be found in the `dist` folder.
@@ -81,8 +81,8 @@ $ docker build -f docker/Dockerfile .
 ## Develop
 
 ```
-$ yarn install
-$ yarn dev
+$ pnpm install
+$ pnpm dev
 ```
 
 ## OpenSubsonic support

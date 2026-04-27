@@ -1,0 +1,4 @@
+onlyBuiltDependencies:
+- vue-demi
+publicHoistPattern:
+  - "*eslint-plugin-*"
