@@ -2,19 +2,18 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
+    "moduleResolution": "bundler",
     "strict": true,
     "jsx": "preserve",
     "skipLibCheck": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
     "sourceMap": true,
-    "baseUrl": "./src",
     "types": ["vite/client"],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     },
     "lib": [
       "esnext",
@@ -28,7 +27,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.vue",
+    "src/**/*.vue"
   ],
   "exclude": [
     "node_modules"
