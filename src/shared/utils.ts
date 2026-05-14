@@ -67,3 +67,22 @@ export function formatDuration(value: number): string {
 export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+export type LabeledToken<T> = { text: string, value?: T }
+
+export function splitByLabels<T>(source: string, items: T[], getName: (item: T) => string): LabeledToken<T>[] {
+  if (!source || items.length === 0) return [{ text: source }]
+  const byName = new Map<string, T>()
+  for (const item of items) {
+    const name = getName(item)
+    if (name) byName.set(name, item)
+  }
+  if (byName.size === 0) return [{ text: source }]
+  const names = [...byName.keys()].sort((a, b) => b.length - a.length).map(RegExp.escape)
+  // (?<!\w)...(?!\w) instead of \b so names ending in punctuation (e.g. "D.S.") still match
+  const pattern = new RegExp(`(?<!\\w)(${names.join('|')})(?!\\w)`, 'g')
+  return source.split(pattern).map((text, i) => ({
+    text,
+    value: i % 2 ? byName.get(text) : undefined,
+  }))
+}
