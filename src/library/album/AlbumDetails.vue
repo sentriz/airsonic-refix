@@ -8,12 +8,7 @@
       <div class="d-flex flex-wrap align-items-center">
         <div>
           by
-          <span v-for="(artist, index) in album.artists" :key="artist.id">
-            <span v-if="index > 0">, </span>
-            <router-link :to="{name: 'artist', params: { id: artist.id }}">
-              {{ artist.name }}
-            </router-link>
-          </span>
+          <ArtistLinks :artists="album.artists" :display-artist="album.displayArtist" />
         </div>
 
         <template v-if="album.year">
@@ -85,6 +80,7 @@
 <script lang="ts">
   import { defineComponent } from 'vue'
   import TrackList from '@/library/track/TrackList.vue'
+  import ArtistLinks from '@/library/artist/ArtistLinks.vue'
   import { Album } from '@/shared/api'
   import { useFavouriteStore } from '@/library/favourite/store'
   import IconLastFm from '@/shared/components/IconLastFm.vue'
@@ -103,6 +99,7 @@
       IconRateYourMusic,
       IconRED,
       TrackList,
+      ArtistLinks,
     },
     props: {
       id: { type: String, required: true }

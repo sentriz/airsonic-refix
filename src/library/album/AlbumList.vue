@@ -9,12 +9,7 @@
     >
       <template #text>
         <slot name="text" v-bind="item">
-          <template v-for="(artist, index) in item.artists">
-            <span v-if="index > 0" :key="artist.id" class="text-muted">, </span>
-            <router-link :key="`${artist.id}-link`" :to="{name: 'artist', params: { id: artist.id }}" class="text-muted">
-              {{ artist.name }}
-            </router-link>
-          </template>
+          <ArtistLinks :artists="item.artists" :display-artist="item.displayArtist" link-class="text-muted" />
         </slot>
       </template>
       <template #context-menu>
@@ -41,8 +36,10 @@
   import { defineComponent } from 'vue'
   import { useFavouriteStore } from '@/library/favourite/store'
   import { usePlayerStore } from '@/player/store'
+  import ArtistLinks from '@/library/artist/ArtistLinks.vue'
 
   export default defineComponent({
+    components: { ArtistLinks },
     props: {
       items: { type: Array, required: true },
       allowHScroll: { type: Boolean, default: false },

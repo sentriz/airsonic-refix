@@ -21,10 +21,7 @@
               </div>
               <div class="text-truncate text-muted">
                 <template v-if="track.artists.length > 0">
-                  <span v-for="(artist, index) in track.artists" :key="artist.id">
-                    <span v-if="index > 0">, </span>
-                    <router-link :to="{name: 'artist', params: { id: artist.id }}" class="text-muted">{{ artist.name }}</router-link>
-                  </span>
+                  <ArtistLinks :artists="track.artists" :display-artist="track.displayArtist" link-class="text-muted" />
                 </template>
                 <template v-else-if="track.album">
                   {{ track.album }}
@@ -187,6 +184,7 @@
   import IconReplayGainAlbum from '@/shared/components/IconReplayGainAlbum.vue'
   import { usePlayerStore } from '@/player/store'
   import Dropdown from '@/shared/components/Dropdown.vue'
+  import ArtistLinks from '@/library/artist/ArtistLinks.vue'
 
   export default defineComponent({
     components: {
@@ -196,6 +194,7 @@
       IconReplayGain,
       IconReplayGainTrack,
       IconReplayGainAlbum,
+      ArtistLinks,
     },
     setup() {
       return {
@@ -238,7 +237,7 @@
       documentTitle(): string {
         return [
           this.streamTitle || this.track?.title,
-          formatArtists(this.track?.artists || []) || this.track?.album,
+          this.track?.displayArtist || formatArtists(this.track?.artists || []) || this.track?.album,
           'Airsonic (refix)'
         ].filter(x => !!x).join(' • ')
       }
