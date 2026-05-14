@@ -13,16 +13,20 @@
       <small>{{ track.description }}</small>
     </div>
     <div v-else-if="track.artists.length" class="d-lg-none text-muted">
-      <small>{{ formatArtists(track.artists) }}</small>
+      <small>
+        <ArtistLinks :artists="track.artists" :display-artist="track.displayArtist" link-class="text-muted" />
+      </small>
     </div>
   </td>
 </template>
 <script lang="ts">
   import { defineComponent, PropType } from 'vue'
-  import { formatArtists, splitByLabels } from '@/shared/utils'
+  import ArtistLinks from '@/library/artist/ArtistLinks.vue'
   import { Track } from '@/shared/api'
+  import { splitByLabels } from '@/shared/utils'
 
   export default defineComponent({
+    components: { ArtistLinks },
     props: {
       track: { type: Object as PropType<Track>, required: true }
     },
@@ -30,9 +34,6 @@
       titleParts() {
         return splitByLabels(this.track.title, this.track.contributors || [], c => c.artist?.name || '')
       }
-    },
-    methods: {
-      formatArtists
     }
   })
 </script>

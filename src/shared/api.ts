@@ -21,6 +21,7 @@ export interface Track {
   albumId?: string
   discNumber?: number
   artists: {name: string, id: string}[]
+  displayArtist?: string
   contributors?: {role: string, subRole?: string, artist: {name: string, id: string}}[]
   isStream?: boolean
   isPodcast?: boolean
@@ -571,6 +572,7 @@ export class API {
       artists: item.artists?.length
         ? item.artists
         : [{ id: item.artistId, name: item.artist }],
+      displayArtist: item.displayArtist,
       contributors: item.contributors,
       url: this.getStreamUrl(item.id),
       image: this.getCoverArtUrl(item),
