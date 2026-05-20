@@ -615,15 +615,18 @@ export class API {
   }
 
   private normalizeReleaseType(item: any): string {
-    if (item.isCompilation) {
+    const types: string[] = (item.releaseTypes || []).map((t: string) => t.toUpperCase())
+    if (item.isCompilation || types.includes('COMPILATION')) {
       return 'COMPILATION'
     }
-    if (!item.releaseTypes?.length || item.releaseTypes[0] === '') {
+    if (types.includes('LIVE')) {
+      return 'LIVE'
+    }
+    if (!types.length || types[0] === '') {
       return 'ALBUM'
     }
-    const value = item.releaseTypes[0].toUpperCase()
-    if (['ALBUM', 'EP', 'SINGLE', 'COMPILATION'].includes(value)) {
-      return value
+    if (['ALBUM', 'EP', 'SINGLE'].includes(types[0])) {
+      return types[0]
     }
     return startCase(item.releaseTypes[0].toLowerCase())
   }
