@@ -55,6 +55,7 @@ export interface Album {
   tracks?: Track[]
   releaseType?: string
   discTitles: string[]
+  recordLabels: string[]
 }
 
 export interface Artist {
@@ -611,6 +612,7 @@ export class API {
       tracks: (item.song || []).map(this.normalizeTrack, this),
       releaseType: this.normalizeReleaseType(item),
       discTitles: this.normalizeDiscTitles(item),
+      recordLabels: (item.recordLabels || []).map((l: any) => l.name).filter(Boolean),
     }
   }
 

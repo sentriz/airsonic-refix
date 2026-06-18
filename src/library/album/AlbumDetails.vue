@@ -15,6 +15,10 @@
           <span class="mx-2">•</span> {{ album.year }}
         </template>
 
+        <template v-if="album.recordLabels.length">
+          <span class="mx-2">•</span> {{ album.recordLabels.join(', ') }}
+        </template>
+
         <template v-if="album.year">
           <span class="mx-2">•</span> {{ duration }}
         </template>
