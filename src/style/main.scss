@@ -139,6 +139,10 @@ a.active {
   box-shadow: none !important;
 }
 
+.text-capitalize-first::first-letter {
+  text-transform: uppercase;
+}
+
 @import './nav-underlined';
 @import 'bootstrap/scss/bootstrap';
 @import 'vue-slider-component/lib/theme/material';

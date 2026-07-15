@@ -9,7 +9,12 @@
     >
       <template #text>
         <slot name="text" v-bind="item">
-          <ArtistLinks :artists="item.artists" :display-artist="item.displayArtist" link-class="text-muted" />
+          <div class="text-truncate">
+            <ArtistLinks :artists="item.artists" :display-artist="item.displayArtist" link-class="text-muted" />
+          </div>
+          <div v-if="item.version" class="text-truncate text-capitalize-first small" :title="item.version">
+            {{ item.version }}
+          </div>
         </slot>
       </template>
       <template #context-menu>

@@ -46,6 +46,7 @@ export interface Album {
   artists: {name: string, id: string}[]
   displayArtist?: string
   year: number
+  version?: string
   favourite: boolean
   genres: Genre[]
   image?: string
@@ -602,6 +603,7 @@ export class API {
       displayArtist: item.displayArtist,
       image: this.getCoverArtUrl(item),
       year: item.year || 0,
+      version: item.version,
       favourite: !!item.starred,
       genres: this.normalizeGenres(item),
       lastFmUrl: item.lastFmUrl,

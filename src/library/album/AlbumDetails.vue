@@ -5,6 +5,9 @@
       <h1 class="display-5 fw-bold">
         {{ album.name }}
       </h1>
+      <p v-if="album.version" class="text-muted mb-2 text-capitalize-first small">
+        {{ album.version }}
+      </p>
       <div class="d-flex flex-wrap align-items-center">
         <div>
           by

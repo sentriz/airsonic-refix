@@ -77,8 +77,13 @@
         </b-button>
       </div>
       <AlbumList :key="`${releaseType}-body`" :items="releaseTypeAlbums">
-        <template #text="{ year }">
-          {{ year || 'Unknown' }}
+        <template #text="{ year, version }">
+          <div class="text-truncate">
+            {{ year || 'Unknown' }}
+          </div>
+          <div v-if="version" class="text-truncate text-capitalize-first small" :title="version">
+            {{ version }}
+          </div>
         </template>
       </AlbumList>
     </template>
