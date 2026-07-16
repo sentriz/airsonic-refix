@@ -5,6 +5,9 @@
       <h1 class="display-5 fw-bold">
         {{ item.name }}
       </h1>
+      <p v-if="item.disambiguation" class="text-muted mb-2 text-capitalize-first small">
+        {{ item.disambiguation }}
+      </p>
       <div class="d-flex flex-wrap align-items-center">
         <span class="text-nowrap">
           <strong>{{ item.albumCount }}</strong> albums

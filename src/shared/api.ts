@@ -62,6 +62,7 @@ export interface Album {
 export interface Artist {
   id: string
   name: string
+  disambiguation?: string
   description?: string
   genres: Genre[]
   albumCount: number
@@ -647,6 +648,7 @@ export class API {
     return {
       id: item.id,
       name: item.name,
+      disambiguation: item.disambiguation,
       description: (item.biography || '').replace(/<a[^>]*>.*?<\/a>/gm, ''),
       genres: uniqBy([...(item.album || []).flatMap(this.normalizeGenres, this)], 'name'),
       albumCount: item.albumCount,

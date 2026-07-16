@@ -7,7 +7,12 @@
       :image="item.image"
     >
       <template #text>
-        <strong>{{ item.albumCount }}</strong> albums
+        <div class="text-truncate">
+          <strong>{{ item.albumCount }}</strong> albums
+        </div>
+        <div v-if="item.disambiguation" class="text-truncate text-capitalize-first small" :title="item.disambiguation">
+          {{ item.disambiguation }}
+        </div>
       </template>
       <template #context-menu>
         <DropdownItem
