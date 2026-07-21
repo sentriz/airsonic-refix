@@ -243,7 +243,10 @@ export class API {
   async getArtistDetails(id: string): Promise<Artist> {
     const info2Promise = this.fetch('rest/getArtistInfo2', { id }).then(r => r.artistInfo2)
     const artist = await this.fetch('rest/getArtist', { id }).then(r => r.artist)
-    const topSongs = await this.fetch('rest/getTopSongs', { artist: artist.name }).then(r => r.topSongs?.song)
+    const topSongsParams = this.auth.serverInfo?.extensions.includes('topSongsByArtistId')
+      ? { id }
+      : { artist: artist.name }
+    const topSongs = await this.fetch('rest/getTopSongs', topSongsParams).then(r => r.topSongs?.song)
     const info2 = await info2Promise
     return this.normalizeArtist({ ...artist, ...info2, topSongs })
   }
