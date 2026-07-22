@@ -8,7 +8,7 @@
       <p v-if="item.disambiguation" class="text-muted mb-2 text-capitalize-first small">
         {{ item.disambiguation }}
       </p>
-      <div class="d-flex flex-wrap align-items-center">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start">
         <span class="text-nowrap">
           <strong>{{ item.albumCount }}</strong> albums
         </span>

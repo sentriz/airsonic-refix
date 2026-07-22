@@ -6,7 +6,7 @@
         {{ playlist.name }}
       </h1>
 
-      <div class="d-flex flex-wrap align-items-center">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start">
         <span class="text-nowrap">
           <strong>{{ playlist.trackCount }}</strong> tracks
         </span>

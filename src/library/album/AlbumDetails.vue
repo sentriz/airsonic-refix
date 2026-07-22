@@ -8,7 +8,7 @@
       <p v-if="album.version" class="text-muted mb-2 text-capitalize-first small">
         {{ album.version }}
       </p>
-      <div class="d-flex flex-wrap align-items-center">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start">
         <div>
           by
           <ArtistLinks :artists="album.artists" :display-artist="album.displayArtist" />
