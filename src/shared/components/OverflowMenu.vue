@@ -3,7 +3,7 @@
     align="end"
     :direction="direction"
     :variant="variant"
-    :toggle-class="variant === 'link' ? 'p-0' : ''"
+    :toggle-class="[variant === 'link' ? 'p-0' : '', toggleClass].join(' ')"
     :disabled="disabled"
   >
     <template #button-content>
@@ -20,6 +20,7 @@
       disabled: { type: Boolean, default: false },
       variant: { type: String, default: 'link' },
       direction: { type: String, default: 'down' },
+      toggleClass: { type: String, default: '' },
     }
   })
 </script>

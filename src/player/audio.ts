@@ -4,7 +4,6 @@ export enum ReplayGainMode {
   None,
   Track,
   Album,
-  _Length
 }
 
 type ReplayGain = {

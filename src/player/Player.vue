@@ -87,19 +87,6 @@
                 <Icon :icon="isFavourite ? 'heart-fill' : 'heart'" />
               </b-button>
 
-              <b-button
-                v-if="track && track.replayGain"
-                title="ReplayGain"
-                variant="transparent"
-                class="m-0"
-                :class="{ 'text-primary': replayGainMode !== ReplayGainMode.None }"
-                @click="toggleReplayGain"
-              >
-                <IconReplayGain v-if="replayGainMode === ReplayGainMode.None" />
-                <IconReplayGainTrack v-else-if="replayGainMode === ReplayGainMode.Track" />
-                <IconReplayGainAlbum v-else-if="replayGainMode === ReplayGainMode.Album" />
-              </b-button>
-
               <Dropdown variant="transparent" align="center" direction="up" menu-style="min-width: 0px;" title="Volume">
                 <template #button-content>
                   <Icon :icon="isMuted ? 'mute' : 'volume'" />
@@ -117,8 +104,12 @@
               </router-link>
             </div>
 
-            <OverflowMenu class="d-md-none" variant="transparent" direction="up">
-              <div class="d-flex justify-content-between align-items-center px-3 py-1">
+            <OverflowMenu
+              :class="{ 'd-md-none': !hasSettings }"
+              :toggle-class="hasActiveSettings ? 'text-primary' : ''"
+              variant="transparent" direction="up"
+            >
+              <div class="d-flex d-md-none justify-content-between align-items-center px-3 py-1">
                 <span>Volume</span>
                 <Slider class="p-3" style="width: 120px;"
                         :min="0" :max="1" :step="0.01" percent
@@ -126,7 +117,7 @@
                 />
               </div>
               <template v-if="track && track.isPodcast">
-                <div class="d-flex justify-content-between align-items-center px-3 py-1">
+                <div class="d-flex d-md-none justify-content-between align-items-center px-3 py-1">
                   <span>Speed</span>
                   <Slider class="px-3" style="width: 120px;"
                           :min="0.7" :max="2" :step="0.1"
@@ -134,36 +125,28 @@
                   />
                 </div>
               </template>
-              <div class="d-flex justify-content-between px-3 py-1">
+              <div class="d-flex d-md-none justify-content-between px-3 py-1">
                 <span>Repeat</span>
                 <SwitchInput :value="repeatActive" @input="toggleRepeat" />
               </div>
-              <div class="d-flex justify-content-between px-3 py-1">
+              <div class="d-flex d-md-none justify-content-between px-3 py-1">
                 <span>Shuffle</span>
                 <SwitchInput :value="shuffleActive" @input="toggleShuffle" />
               </div>
-              <div class="d-flex justify-content-between px-3 py-1">
+              <div class="d-flex d-md-none justify-content-between px-3 py-1">
                 <span>Favourite</span>
                 <b-button variant="transparent" class="m-0 px-2 py-0" @click.stop="toggleFavourite">
                   <Icon :icon="isFavourite ? 'heart-fill' : 'heart'" />
                 </b-button>
               </div>
 
-              <div v-if="track && track.replayGain" class="d-flex justify-content-between px-3 py-1">
-                <span>Replay Gain</span>
-                <b-button
-                  title="ReplayGain"
-                  variant="transparent"
-                  class="m-0 px-2 py-0"
-                  :class="{ 'text-primary': replayGainMode !== ReplayGainMode.None }"
-                  @click.stop="toggleReplayGain"
-                >
-                  <small v-if="replayGainMode === ReplayGainMode.None" class="d-flex align-items-center">
-                    Off
-                  </small>
-                  <IconReplayGainTrack v-else-if="replayGainMode === ReplayGainMode.Track" />
-                  <IconReplayGainAlbum v-else-if="replayGainMode === ReplayGainMode.Album" />
-                </b-button>
+              <div v-if="track && track.replayGain" class="d-flex gap-3 justify-content-between align-items-center px-3 py-1">
+                <span>ReplayGain</span>
+                <select class="form-select form-select-sm" style="width: 6rem;" :value="replayGainMode" @change="onReplayGainModeChange">
+                  <option v-for="mode in replayGainModes" :key="mode.value" :value="mode.value">
+                    {{ mode.label }}
+                  </option>
+                </select>
               </div>
             </OverflowMenu>
           </div>
@@ -179,9 +162,6 @@
   import { useFavouriteStore } from '@/library/favourite/store'
   import { formatArtists } from '@/shared/utils'
   import SwitchInput from '@/shared/components/SwitchInput.vue'
-  import IconReplayGain from '@/shared/components/IconReplayGain.vue'
-  import IconReplayGainTrack from '@/shared/components/IconReplayGainTrack.vue'
-  import IconReplayGainAlbum from '@/shared/components/IconReplayGainAlbum.vue'
   import { usePlayerStore } from '@/player/store'
   import Dropdown from '@/shared/components/Dropdown.vue'
   import ArtistLinks from '@/library/artist/ArtistLinks.vue'
@@ -191,14 +171,15 @@
       Dropdown,
       SwitchInput,
       ProgressBar,
-      IconReplayGain,
-      IconReplayGainTrack,
-      IconReplayGainAlbum,
       ArtistLinks,
     },
     setup() {
       return {
-        ReplayGainMode,
+        replayGainModes: [
+          { value: ReplayGainMode.None, label: 'Off' },
+          { value: ReplayGainMode.Track, label: 'Track' },
+          { value: ReplayGainMode.Album, label: 'Album' },
+        ],
         favouriteStore: useFavouriteStore(),
         playerStore: usePlayerStore(),
       }
@@ -216,6 +197,9 @@
       replayGainMode(): ReplayGainMode {
         return this.playerStore.replayGainMode
       },
+      hasSettings(): boolean {
+        return !!this.track?.replayGain
+      },
       repeatActive(): boolean {
         return this.playerStore.repeat
       },
@@ -227,6 +211,9 @@
       },
       isFavourite(): boolean {
         return !!this.track && !!this.favouriteStore.tracks[this.track.id]
+      },
+      hasActiveSettings(): boolean {
+        return !!this.track?.replayGain && this.replayGainMode !== ReplayGainMode.None
       },
       track() {
         return this.playerStore.track
@@ -263,8 +250,8 @@
       setVolume(volume: any) {
         return this.playerStore.setVolume(parseFloat(volume))
       },
-      toggleReplayGain() {
-        return this.playerStore.toggleReplayGain()
+      onReplayGainModeChange(event: Event) {
+        return this.playerStore.setReplayGainMode(parseInt((event.target as HTMLSelectElement).value))
       },
       setPlaybackRate(value: number) {
         return this.playerStore.setPlaybackRate(value)

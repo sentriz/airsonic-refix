@@ -167,8 +167,7 @@ export const usePlayerStore = defineStore('player', {
         this.queueIndex = 0
       }
     },
-    toggleReplayGain() {
-      const mode = (this.replayGainMode + 1) % ReplayGainMode._Length
+    setReplayGainMode(mode: ReplayGainMode) {
       audio.setReplayGainMode(mode)
       this.replayGainMode = mode
       localStorage.setItem('player.replayGainMode', `${mode}`)
