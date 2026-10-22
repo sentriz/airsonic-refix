@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { shuffle, shuffled, trackListEquals, formatArtists } from '@/shared/utils'
-import { API, Track } from '@/shared/api'
+import { API, Stream, Track } from '@/shared/api'
 import { AudioController, ReplayGainMode } from '@/player/audio'
 import { useMainStore } from '@/shared/store'
 
@@ -12,6 +12,7 @@ localStorage.removeItem('queueIndex')
 const storedVolume = parseFloat(localStorage.getItem('player.volume') || '1.0')
 const storedReplayGainMode = parseInt(localStorage.getItem('player.replayGainMode') ?? '0')
 const storedPodcastPlaybackRate = parseFloat(localStorage.getItem('player.podcastPlaybackRate') || '1.0')
+const storedMaxBitrate = parseInt(localStorage.getItem('player.maxBitrate') ?? '0')
 const mediaSession: MediaSession | undefined = navigator.mediaSession
 const audio = new AudioController()
 
@@ -23,11 +24,13 @@ export const usePlayerStore = defineStore('player', {
     duration: 0, // duration of current track in seconds
     currentTime: 0, // position of current track in seconds
     streamTitle: null as null | string,
+    stream: null as null | Stream,
     replayGainMode: storedReplayGainMode as ReplayGainMode,
     repeat: localStorage.getItem('player.repeat') !== 'false',
     shuffle: localStorage.getItem('player.shuffle') === 'true',
     volume: storedVolume,
     podcastPlaybackRate: storedPodcastPlaybackRate,
+    maxBitrate: storedMaxBitrate,
     scrobbled: false,
   }),
   getters: {
@@ -68,7 +71,7 @@ export const usePlayerStore = defineStore('player', {
     async playTrackListIndex(index: number) {
       this.setQueueIndex(index)
       this.setPlaying()
-      await audio.changeTrack({ ...this.track, playbackRate: this.playbackRate })
+      await this.changeTrack()
     },
     async playTrackList(tracks: Track[], index?: number) {
       if (index == null) {
@@ -84,7 +87,7 @@ export const usePlayerStore = defineStore('player', {
       }
       this.setQueueIndex(index)
       this.setPlaying()
-      await audio.changeTrack({ ...this.track, playbackRate: this.playbackRate })
+      await this.changeTrack()
     },
     async resume() {
       this.setPlaying()
@@ -100,16 +103,21 @@ export const usePlayerStore = defineStore('player', {
     async next() {
       this.setQueueIndex(this.queueIndex + 1)
       this.setPlaying()
-      await audio.changeTrack({ ...this.track, playbackRate: this.playbackRate })
+      await this.changeTrack()
     },
     async previous() {
       this.setQueueIndex(audio.currentTime() > 3 ? this.queueIndex : this.queueIndex - 1)
       this.setPlaying()
-      await audio.changeTrack(this.track!)
+      await this.changeTrack()
     },
-    async seek(value: number) {
-      if (isFinite(this.duration)) {
-        await audio.seek(this.duration * value)
+    async seek(position: number) {
+      if (!this.track || this.track.isStream) {
+        return
+      }
+      if (audio.canSeek()) {
+        await audio.seek(position)
+      } else {
+        await this.changeTrack({ paused: !this.isPlaying, position })
       }
     },
     async loadQueue() {
@@ -117,13 +125,12 @@ export const usePlayerStore = defineStore('player', {
       this.setQueue(tracks)
       this.setQueueIndex(currentTrack)
       this.setPaused()
-      await audio.changeTrack({ ...this.track, paused: true, playbackRate: this.playbackRate })
-      await audio.seek(currentTrackPosition)
+      await this.changeTrack({ paused: true, position: currentTrackPosition })
     },
     async resetQueue() {
       this.setQueueIndex(0)
       this.setPaused()
-      await audio.changeTrack({ ...this.track, paused: true, playbackRate: this.playbackRate })
+      await this.changeTrack({ paused: true })
     },
     async clearQueue() {
       if (!this.queue) {
@@ -136,7 +143,7 @@ export const usePlayerStore = defineStore('player', {
         this.setQueue([])
         this.setQueueIndex(-1)
         this.setPaused()
-        await audio.changeTrack({ })
+        await this.changeTrack()
       }
     },
     addToQueue(tracks: Track[]) {
@@ -171,6 +178,16 @@ export const usePlayerStore = defineStore('player', {
       audio.setReplayGainMode(mode)
       this.replayGainMode = mode
       localStorage.setItem('player.replayGainMode', `${mode}`)
+    },
+    async setMaxBitrate(value: number) {
+      if (value === this.maxBitrate) {
+        return
+      }
+      this.maxBitrate = value
+      localStorage.setItem('player.maxBitrate', `${value}`)
+      if (this.track) {
+        await this.changeTrack({ paused: !this.isPlaying, position: audio.currentTime(), keepDirectPlay: true })
+      }
     },
     toggleRepeat() {
       this.repeat = !this.repeat
@@ -227,8 +244,8 @@ export const usePlayerStore = defineStore('player', {
       this.scrobbled = false
       const track = this.queue[index]
       this.duration = track.duration
-      const next = (index + 1) % this.queue.length
-      audio.setBuffer(this.queue[next].url!)
+      const next = this.queue[(index + 1) % this.queue.length]
+      this.api.resolveStream(next, this.maxBitrate, 0).then(({ url }) => audio.setBuffer(url!), console.warn)
       if (mediaSession) {
         mediaSession.metadata = new MediaMetadata({
           title: track.title,
@@ -237,6 +254,29 @@ export const usePlayerStore = defineStore('player', {
           artwork: track.image ? [{ src: track.image, sizes: '300x300' }] : undefined,
         })
       }
+    },
+    async changeTrack(options: { paused?: boolean, position?: number, keepDirectPlay?: boolean } = {}) {
+      const track = this.track
+      const position = Math.floor(options.position ?? 0)
+      const stream: Stream | Error = track
+        ? await this.api.resolveStream(track, this.maxBitrate, position).catch((err: Error) => err)
+        : {}
+      if (track !== this.track) {
+        return
+      }
+      if (stream instanceof Error) {
+        this.stream = null
+        this.setPaused()
+        useMainStore().setError(stream)
+        await audio.changeTrack({ paused: true })
+        return
+      }
+      if (options.keepDirectPlay && this.stream && !this.stream.transcode && !stream.transcode) {
+        return
+      }
+      this.stream = stream
+      const { url, offset } = stream
+      await audio.changeTrack({ ...track, url, offset, position, paused: options.paused, playbackRate: this.playbackRate })
     },
   },
 })
@@ -274,9 +314,8 @@ export function setupAudio(playerStore: ReturnType<typeof usePlayerStore>, mainS
   audio.setReplayGainMode(storedReplayGainMode)
   audio.setVolume(storedVolume)
 
-  const track = playerStore.track
-  if (track?.url) {
-    audio.changeTrack({ ...track, paused: true })
+  if (playerStore.track?.url) {
+    playerStore.changeTrack({ paused: true })
   }
   audio.setPlaybackRate(playerStore.playbackRate)
 
@@ -298,16 +337,16 @@ export function setupAudio(playerStore: ReturnType<typeof usePlayerStore>, mainS
     })
     mediaSession.setActionHandler('seekto', (details) => {
       if (details.seekTime) {
-        audio.seek(details.seekTime)
+        playerStore.seek(details.seekTime)
       }
     })
     mediaSession.setActionHandler('seekforward', (details) => {
       const offset = details.seekOffset || 10
-      audio.seek(Math.min(audio.currentTime() + offset, audio.duration()))
+      playerStore.seek(Math.min(audio.currentTime() + offset, playerStore.duration))
     })
     mediaSession.setActionHandler('seekbackward', (details) => {
       const offset = details.seekOffset || 10
-      audio.seek(Math.max(audio.currentTime() - offset, 0))
+      playerStore.seek(Math.max(audio.currentTime() - offset, 0))
     })
     // FIXME
     // function updatePositionState() {

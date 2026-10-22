@@ -46,7 +46,7 @@
         return `${formatDuration(time)} / ${formatDuration(duration)}`
       },
       seek(value: number) {
-        this.playerStore.seek(value)
+        this.playerStore.seek(value * this.playerStore.duration)
       },
     }
   })

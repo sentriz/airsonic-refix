@@ -20,6 +20,8 @@ export class AudioController {
   private statsListener : any = null
   private replayGainMode = ReplayGainMode.None
   private replayGain: ReplayGain | null = null
+  private offset = 0
+  private seekable = true
 
   private context = new AudioContext()
   private pipeline = creatPipeline(this.context, {})
@@ -32,11 +34,11 @@ export class AudioController {
   onerror: (err: MediaError | null) => void = () => { /* do nothing */ }
 
   currentTime() {
-    return this.pipeline.audio.currentTime
+    return this.offset + this.pipeline.audio.currentTime
   }
 
   duration() {
-    return this.pipeline.audio.duration
+    return this.offset + this.pipeline.audio.duration
   }
 
   setBuffer(url: string) {
@@ -68,28 +70,39 @@ export class AudioController {
     await this.fadeIn()
   }
 
+  canSeek() {
+    return this.seekable
+  }
+
   async seek(value: number) {
     if (!this.pipeline.audio.paused) {
       await this.fadeOut(this.fadeDuration / 2.0)
     }
-    this.pipeline.audio.currentTime = value
+    this.pipeline.audio.currentTime = value - this.offset
     if (!this.pipeline.audio.paused) {
       await this.fadeIn(this.fadeDuration / 2.0)
     }
   }
 
-  async changeTrack(options: { url?: string, paused?: boolean, replayGain?: ReplayGain, isStream?: boolean, playbackRate?: number }) {
+  async changeTrack(options: { url?: string, offset?: number, position?: number, paused?: boolean, replayGain?: ReplayGain, isStream?: boolean, playbackRate?: number }) {
     if (this.pipeline.audio) {
       endPlayback(this.context, this.pipeline, 1.0)
     }
 
     this.replayGain = options.replayGain || null
+    this.offset = options.offset ?? 0
+    this.seekable = options.offset === undefined
 
     this.pipeline = creatPipeline(this.context, {
       url: options.url,
       volume: this.pipeline.volumeNode.gain.value,
       replayGain: this.replayGainFactor(),
     })
+
+    const start = (options.position ?? 0) - this.offset
+    if (start > 0) {
+      this.pipeline.audio.currentTime = start
+    }
 
     this.pipeline.audio.onerror = () => {
       this.onerror(this.pipeline.audio.error)
@@ -98,16 +111,16 @@ export class AudioController {
       this.onended()
     }
     this.pipeline.audio.ontimeupdate = () => {
-      this.ontimeupdate(this.pipeline.audio.currentTime)
+      this.ontimeupdate(this.currentTime())
     }
     this.pipeline.audio.ondurationchange = () => {
-      this.ondurationchange(this.pipeline.audio.duration)
+      this.ondurationchange(this.duration())
     }
     this.pipeline.audio.onpause = () => {
       this.onpause()
     }
-    this.ondurationchange(this.pipeline.audio.duration)
-    this.ontimeupdate(this.pipeline.audio.currentTime)
+    this.ondurationchange(this.duration())
+    this.ontimeupdate(this.currentTime())
     this.onstreamtitlechange(null)
     this.pipeline.audio.playbackRate = options.playbackRate ?? 1.0
 

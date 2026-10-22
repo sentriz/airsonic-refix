@@ -148,6 +148,18 @@
                   </option>
                 </select>
               </div>
+
+              <div v-if="supportsTranscoding" class="d-flex gap-3 justify-content-between align-items-center px-3 py-1">
+                <div class="d-flex flex-column">
+                  <span>Max bitrate</span>
+                  <small v-if="streamDescription" class="text-muted text-nowrap">{{ streamDescription }}</small>
+                </div>
+                <select class="form-select form-select-sm" style="width: 6rem;" :value="maxBitrate" @change="onMaxBitrateChange">
+                  <option v-for="value in maxBitrates" :key="value" :value="value">
+                    {{ formatBitrate(value) }}
+                  </option>
+                </select>
+              </div>
             </OverflowMenu>
           </div>
         </div>
@@ -165,6 +177,8 @@
   import { usePlayerStore } from '@/player/store'
   import Dropdown from '@/shared/components/Dropdown.vue'
   import ArtistLinks from '@/library/artist/ArtistLinks.vue'
+  import { useAuth } from '@/auth/service'
+  import { StreamDetails } from '@/shared/api'
 
   export default defineComponent({
     components: {
@@ -182,6 +196,8 @@
         ],
         favouriteStore: useFavouriteStore(),
         playerStore: usePlayerStore(),
+        supportsTranscoding: !!useAuth().serverInfo?.extensions.includes('transcoding'),
+        maxBitrates: [0, 320, 192, 128, 64, 32],
       }
     },
     computed: {
@@ -197,8 +213,20 @@
       replayGainMode(): ReplayGainMode {
         return this.playerStore.replayGainMode
       },
+      maxBitrate(): number {
+        return this.playerStore.maxBitrate
+      },
       hasSettings(): boolean {
-        return !!this.track?.replayGain
+        return !!this.track?.replayGain || this.supportsTranscoding
+      },
+      streamDescription(): string | null {
+        const { source, transcode } = this.playerStore.stream ?? {}
+        if (!source) {
+          return null
+        }
+        return transcode
+          ? `${formatStreamDetails(source)} → ${formatStreamDetails(transcode)}`
+          : `${formatStreamDetails(source)} (direct play)`
       },
       repeatActive(): boolean {
         return this.playerStore.repeat
@@ -213,7 +241,8 @@
         return !!this.track && !!this.favouriteStore.tracks[this.track.id]
       },
       hasActiveSettings(): boolean {
-        return !!this.track?.replayGain && this.replayGainMode !== ReplayGainMode.None
+        return (!!this.track?.replayGain && this.replayGainMode !== ReplayGainMode.None) ||
+          (this.supportsTranscoding && this.maxBitrate > 0)
       },
       track() {
         return this.playerStore.track
@@ -253,6 +282,12 @@
       onReplayGainModeChange(event: Event) {
         return this.playerStore.setReplayGainMode(parseInt((event.target as HTMLSelectElement).value))
       },
+      formatBitrate(value: number) {
+        return value > 0 ? `${value}k` : 'Raw'
+      },
+      onMaxBitrateChange(event: Event) {
+        return this.playerStore.setMaxBitrate(parseInt((event.target as HTMLSelectElement).value))
+      },
       setPlaybackRate(value: number) {
         return this.playerStore.setPlaybackRate(value)
       },
@@ -267,6 +302,13 @@
       },
     }
   })
+
+  function formatStreamDetails(stream: StreamDetails) {
+    const quality = stream.audioBitdepth && stream.audioSamplerate
+      ? `${stream.audioBitdepth}/${stream.audioSamplerate / 1000}kHz`
+      : stream.audioBitrate ? `${Math.round(stream.audioBitrate / 1000)}k` : ''
+    return `${stream.codec.toUpperCase()} ${quality}`.trim()
+  }
 </script>
 <style scoped>
   .player {

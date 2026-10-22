@@ -119,6 +119,20 @@ export interface Playlist {
   tracks?: Track[]
 }
 
+export interface StreamDetails {
+  codec: string
+  audioBitrate?: number
+  audioSamplerate?: number
+  audioBitdepth?: number
+}
+
+export interface Stream {
+  url?: string
+  offset?: number
+  source?: StreamDetails
+  transcode?: StreamDetails
+}
+
 export interface PlayQueue {
   tracks: Track[]
   currentTrack: number
@@ -137,28 +151,39 @@ export class SubsonicError extends Error {
 }
 
 export class API {
-  private readonly fetch: (path: string, params?: any) => Promise<any>
+  private readonly fetch: (path: string, params?: any, body?: any) => Promise<any>
   private readonly clientName = window.origin || 'web'
+  private readonly clientInfo = getClientInfo(this.clientName)
 
   constructor(private auth: AuthService) {
-    this.fetch = (path: string, params: any) => {
+    this.fetch = (path: string, params: any, body?: any) => {
       params = { ...params, v: '1.15.0', f: 'json', c: this.clientName }
+      const query = `${toQueryString(params)}&${this.auth.urlParams}`
 
-      const request = auth.serverInfo?.extensions.includes('formPost')
-        ? new Request(`${this.auth.server}/${path}`, {
+      const request = body !== undefined
+        ? new Request(`${this.auth.server}/${path}?${query}`, {
           method: 'POST',
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
-          body: `${toQueryString(params)}&${this.auth.urlParams}`
+          body: JSON.stringify(body),
         })
-        : new Request(`${this.auth.server}/${path}?${toQueryString(params)}&${this.auth.urlParams}`, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-          }
-        })
+        : auth.serverInfo?.extensions.includes('formPost')
+          ? new Request(`${this.auth.server}/${path}`, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: query,
+          })
+          : new Request(`${this.auth.server}/${path}?${query}`, {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+            }
+          })
 
       return window
         .fetch(request)
@@ -541,6 +566,28 @@ export class API {
     return this.fetch('rest/scrobble', { id, submission: false })
   }
 
+  async resolveStream(track: Track, maxBitrate: number, position: number): Promise<Stream> {
+    if (track.isStream || track.isPodcast || !this.auth.serverInfo?.extensions.includes('transcoding')) {
+      return { url: track.url }
+    }
+    const params = { mediaId: track.id, mediaType: 'song' }
+    const clientInfo = { ...this.clientInfo, maxAudioBitrate: maxBitrate * 1000 }
+    const { transcodeDecision } = await this.fetch('rest/getTranscodeDecision', params, clientInfo)
+    const { transcodeParams, canDirectPlay, canTranscode, errorReason, sourceStream, transcodeStream } = transcodeDecision
+    if (canDirectPlay) {
+      const url = transcodeParams
+        ? this.getUrl('rest/getTranscodeStream', { ...params, transcodeParams })
+        : this.getUrl('rest/stream', { id: track.id, format: 'raw' })
+      return { url, source: sourceStream }
+    }
+    if (!canTranscode || !transcodeParams) {
+      throw new Error(`Can't play "${track.title}": ${errorReason || 'no compatible stream'}`)
+    }
+    const offset = Math.floor(position)
+    const url = this.getUrl('rest/getTranscodeStream', { ...params, transcodeParams, offset: `${offset}` })
+    return { url, offset, source: sourceStream, transcode: transcodeStream }
+  }
+
   private normalizeRadioStation(item: any): Track & RadioStation {
     return {
       id: `radio-${item.id}`,
@@ -716,33 +763,50 @@ export class API {
   }
 
   getDownloadUrl(id: any) {
-    const { server, urlParams } = this.auth
-    return `${server}/rest/download` +
-      `?id=${id}` +
-      '&v=1.15.0' +
-      `&${urlParams}` +
-      `&c=${this.clientName}`
+    return this.getUrl('rest/download', { id })
   }
 
   private getCoverArtUrl(item: any) {
     if (!item.coverArt) {
       return undefined
     }
-    const { server, urlParams } = this.auth
-    return `${server}/rest/getCoverArt` +
-      `?id=${item.coverArt}` +
-      '&v=1.15.0' +
-      `&${urlParams}` +
-      `&c=${this.clientName}` +
-      '&size=300'
+    return this.getUrl('rest/getCoverArt', { id: item.coverArt, size: '300' })
   }
 
   private getStreamUrl(id: any) {
+    return this.getUrl('rest/stream', { id })
+  }
+
+  private getUrl(path: string, params: Record<string, string>) {
     const { server, urlParams } = this.auth
-    return `${server}/rest/stream` +
-      `?id=${id}` +
-      '&v=1.15.0' +
-      `&${urlParams}` +
-      `&c=${this.clientName}`
+    return `${server}/${path}?${toQueryString({ ...params, v: '1.15.0', c: this.clientName })}&${urlParams}`
+  }
+}
+
+const codecs = [
+  { codec: 'flac', container: 'flac', mime: 'audio/flac' },
+  { codec: 'opus', container: 'ogg', mime: 'audio/ogg; codecs="opus"' },
+  { codec: 'mp3', container: 'mp3', mime: 'audio/mpeg' },
+  { codec: 'vorbis', container: 'ogg', mime: 'audio/ogg; codecs="vorbis"' },
+  { codec: 'aac', container: 'mp4', mime: 'audio/mp4; codecs="mp4a.40.2"' },
+  { codec: 'alac', container: 'mp4', mime: 'audio/mp4; codecs="alac"' },
+]
+
+const transcodeCodecs = ['flac', 'opus', 'mp3']
+
+function getClientInfo(name: string) {
+  const audio = new Audio()
+  const supported = codecs.filter(c => audio.canPlayType(c.mime) !== '')
+  return {
+    name,
+    platform: navigator.userAgent,
+    directPlayProfiles: supported.map(c => ({
+      containers: [c.container],
+      audioCodecs: [c.codec],
+      protocols: ['http'],
+    })),
+    transcodingProfiles: supported
+      .filter(c => transcodeCodecs.includes(c.codec))
+      .map(c => ({ container: c.container, audioCodec: c.codec, protocol: 'http' })),
   }
 }
